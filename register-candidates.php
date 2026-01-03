@@ -96,7 +96,9 @@ if(isset($_SESSION['id_user']) || isset($_SESSION['id_company'])) {
       <div class="container">
         <div class="row latest-job margin-top-50 margin-bottom-20 bg-white">
           <h1 class="text-center margin-bottom-20">CREATE YOUR PROFILE</h1>
+
           <form method="post" id="registerCandidates" action="adduser.php" enctype="multipart/form-data">
+            
             <div class="col-md-6 latest-job ">
               <div class="form-group">
                 <input class="form-control input-lg" type="text" id="fname" name="fname" placeholder="First Name *" required>
