@@ -13,11 +13,11 @@ if(isset($_POST)) {
 	$email = mysqli_real_escape_string($conn, $_POST['email']);
 	$password = mysqli_real_escape_string($conn, $_POST['password']);
 
-	//Encrypt Password
-	$password = base64_encode(strrev(md5($password)));
+	// --- CHANGE: Removed the old MD5 encryption line ---
+	// $password = base64_encode(strrev(md5($password))); 
 
-	//sql query to check user login
-	$sql = "SELECT id_user, firstname, lastname, email, active FROM users WHERE email='$email' AND password='$password'";
+	// --- CHANGE: Select password hash from DB using only Email ---
+	$sql = "SELECT id_user, firstname, lastname, email, active, password FROM users WHERE email='$email'";
 	$result = $conn->query($sql);
 
 	//if user table has this this login details
@@ -25,40 +25,59 @@ if(isset($_POST)) {
 		//output data
 		while($row = $result->fetch_assoc()) {
 
-			if($row['active'] == '0') {
-				$_SESSION['loginActiveError'] = "Your Account Is Not Active. Check Your Email.";
-		 		header("Location: login-candidates.php");
-				exit();
-			} else if($row['active'] == '1') { 
+            // --- CHANGE: Verify the hashed password ---
+            if(password_verify($password, $row['password'])) {
 
-				//Set some session variables for easy reference
-				$_SESSION['name'] = $row['firstname'] . " " . $row['lastname'];
-				$_SESSION['id_user'] = $row['id_user'];
+                // Password matches, now check if account is active
+                if($row['active'] == '0') {
+                    $_SESSION['loginActiveError'] = "Your Account Is Not Active. Check Your Email.";
+                    header("Location: login-candidates.php");
+                    exit();
+                } else if($row['active'] == '1') { 
 
-				if(isset($_SESSION['callFrom'])) {
-					$location = $_SESSION['callFrom'];
-					unset($_SESSION['callFrom']);
-					
-					header("Location: " . $location);
-					exit();
-				} else {
-					header("Location: user/index.php");
-					exit();
-				}
-			} else if($row['active'] == '2') { 
+                    // --- CHANGE: Secure Session Fixation Prevention ---
+                    session_regenerate_id(true);
 
-				$_SESSION['loginActiveError'] = "Your Account Is Deactivated. Contact Admin To Reactivate.";
-		 		header("Location: login-candidates.php");
-				exit();
-			}
+                    // --- CHANGE: 2FA / Two-Step Verification Logic ---
+                    // Instead of logging in directly, we generate a code and redirect to verify.php
+                    
+                    // 1. Generate 6-digit OTP
+                    $otp = rand(100000, 999999);
+                    
+                    // 2. Store user info and OTP in TEMPORARY session variables
+                    $_SESSION['temp_id_user'] = $row['id_user'];
+                    $_SESSION['temp_name'] = $row['firstname'] . " " . $row['lastname'];
+                    $_SESSION['temp_role'] = 'candidate'; // RBAC Role
+                    $_SESSION['otp'] = $otp;
+                    
+                    // 3. Send OTP to email (Simulated for now, un-comment mail code to use)
+                    // mail($email, "Your OTP", "Your One Time Password is: $otp");
+                    
+                    // NOTE: For testing, we will just redirect. You must check your DB or echo the OTP on verify.php to see it.
+                    header("Location: verify.php"); 
+                    exit();
 
-			//Redirect them to user dashboard once logged in successfully
-			
+                    /* NOTE: The old direct login code is removed because we now force 2FA.
+                       The redirection to 'user/index.php' will happen inside verify.php
+                    */
+
+                } else if($row['active'] == '2') { 
+
+                    $_SESSION['loginActiveError'] = "Your Account Is Deactivated. Contact Admin To Reactivate.";
+                    header("Location: login-candidates.php");
+                    exit();
+                }
+
+            } else {
+                // Password incorrect
+                $_SESSION['loginError'] = "Invalid Email or Password!";
+                header("Location: login-candidates.php");
+                exit();
+            }
 		}
  	} else {
-
- 		//if no matching record found in user table then redirect them back to login page
- 		$_SESSION['loginError'] = $conn->error;
+ 		//if no matching record found in user table
+ 		$_SESSION['loginError'] = "Invalid Email or Password!";
  		header("Location: login-candidates.php");
 		exit();
  	}
