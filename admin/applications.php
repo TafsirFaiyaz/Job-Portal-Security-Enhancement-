@@ -2,8 +2,8 @@
 
 session_start();
 
-if(empty($_SESSION['id_admin'])) {
-  header("Location: index.php");
+if(empty($_SESSION['id_admin']) || $_SESSION['role'] != 'admin') {
+  header("Location: ../index.php");
   exit();
 }
 
