@@ -3,9 +3,10 @@
 //To Handle Session Variables on This Page
 session_start();
 
-if(empty($_SESSION['id_user'])) {
-	header("Location: index.php");
-	exit();
+if(empty($_SESSION['id_user']) || $_SESSION['role'] != 'candidate') {
+    $_SESSION['loginError'] = "You must login as a candidate to apply!";
+    header("Location: login-candidates.php");
+    exit();
 }
 
 //Including Database Connection From db.php file to avoid rewriting in all files
