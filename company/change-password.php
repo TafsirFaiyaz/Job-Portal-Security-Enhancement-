@@ -3,7 +3,7 @@
 //To Handle Session Variables on This Page
 session_start();
 
-if(empty($_SESSION['id_company'])) {
+if(empty($_SESSION['id_company']) || $_SESSION['role'] != 'company') {
   header("Location: ../index.php");
   exit();
 }

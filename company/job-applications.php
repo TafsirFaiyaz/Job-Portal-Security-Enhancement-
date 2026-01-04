@@ -4,7 +4,7 @@
 session_start();
 
 //If user Not logged in then redirect them back to homepage. 
-if(empty($_SESSION['id_company'])) {
+if(empty($_SESSION['id_company']) || $_SESSION['role'] != 'company') {
   header("Location: ../index.php");
   exit();
 }
