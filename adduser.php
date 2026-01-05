@@ -52,12 +52,13 @@ if(isset($_POST)) {
         $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
         $hash = md5(uniqid()); // Email verification token
 
-        // 4. Insert User (Prepared Statement)
-        $sql = "INSERT INTO users(firstname, lastname, email, password, address, city, state, contactno, qualification, stream, passingyear, dob, age, designation, resume, hash, aboutme, skills) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+// 4. Insert User (Prepared Statement)
+        // MODIFICATION: Added 'active' to the columns and '1' to the values
+        $sql = "INSERT INTO users(firstname, lastname, email, password, address, city, state, contactno, qualification, stream, passingyear, dob, age, designation, resume, hash, aboutme, skills, active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '1')";
         
         $stmt = $conn->prepare($sql);
 
-        // Bind 18 parameters
+        // Bind parameters (No changes needed here)
         $stmt->bind_param("ssssssssssssssssss", 
             $_POST['fname'], 
             $_POST['lname'], 

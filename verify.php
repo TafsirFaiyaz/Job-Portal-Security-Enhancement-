@@ -1,22 +1,21 @@
 <?php
 session_start();
 
-// If no OTP is pending, redirect back to login
 if(empty($_SESSION['otp'])) {
     header("Location: index.php");
     exit();
 }
 
-// Handle Form Submission
 if(isset($_POST['submit_otp'])) {
     
     $user_otp = $_POST['otp_code'];
-    $stored_otp = $_SESSION['otp'];
+    $stored_hash = $_SESSION['otp'];
 
-    if($user_otp == $stored_otp) {
-        // --- SUCCESS: OTP Matches ---
+    // --- SECURITY FIX: Use password_verify ---
+    if(password_verify($user_otp, $stored_hash)) {
         
-        // Transfer temporary session data to permanent "Logged In" status
+        // --- SUCCESS ---
+        
         if($_SESSION['temp_role'] == 'candidate') {
             $_SESSION['id_user'] = $_SESSION['temp_id_user'];
             $_SESSION['name'] = $_SESSION['temp_name'];
@@ -35,7 +34,7 @@ if(isset($_POST['submit_otp'])) {
             $redirect = "admin/dashboard.php";
         }
 
-        // Clear temporary OTP variables
+        // Clear temp session
         unset($_SESSION['otp']);
         unset($_SESSION['temp_id_user']);
         unset($_SESSION['temp_id_company']);
@@ -43,7 +42,6 @@ if(isset($_POST['submit_otp'])) {
         unset($_SESSION['temp_role']);
         unset($_SESSION['temp_name']);
 
-        // Redirect to Dashboard
         header("Location: " . $redirect);
         exit();
 
@@ -63,11 +61,6 @@ if(isset($_POST['submit_otp'])) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/AdminLTE.min.css">
   <link rel="stylesheet" href="css/_all-skins.min.css">
-  
-  <style>
-      .login-box { margin-top: 10%; }
-      .otp-alert { color: green; font-weight: bold; text-align: center; margin-bottom: 10px; background: #e6fffa; padding: 10px; border: 1px solid green;}
-  </style>
 </head>
 <body class="hold-transition login-page">
 <div class="login-box">
@@ -78,10 +71,6 @@ if(isset($_POST['submit_otp'])) {
   <div class="login-box-body">
     <p class="login-box-msg">Two-Step Verification</p>
 
-    <div class="otp-alert">
-        (Testing Mode) Your OTP is: <?php echo $_SESSION['otp']; ?>
-    </div>
-    
     <form method="post" action="">
       <div class="form-group has-feedback">
         <input type="number" name="otp_code" class="form-control" placeholder="Enter 6-digit OTP" required>
