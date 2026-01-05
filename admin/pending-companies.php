@@ -30,7 +30,6 @@ require_once("../db.php");
 <div class="wrapper">
 
   <header class="main-header">
-
     <a href="index.php" class="logo logo-bg">
       <span class="logo-mini"><b>J</b>P</span>
       <span class="logo-lg"><b>Job</b> Portal</span>
@@ -39,7 +38,6 @@ require_once("../db.php");
     <nav class="navbar navbar-static-top">
       <div class="navbar-custom-menu">
         <ul class="nav navbar-nav">
-                   
         </ul>
       </div>
     </nav>
@@ -57,10 +55,10 @@ require_once("../db.php");
               </div>
               <div class="box-body no-padding">
                 <ul class="nav nav-pills nav-stacked">
-                  <li class="active"><a href="dashboard.php"><i class="fa fa-dashboard"></i> Dashboard</a></li>
+                  <li><a href="dashboard.php"><i class="fa fa-dashboard"></i> Dashboard</a></li>
                   <li><a href="active-jobs.php"><i class="fa fa-briefcase"></i> Active Jobs</a></li>
                   <li><a href="companies.php"><i class="fa fa-building"></i> Companies</a></li>
-                  <li><a href="pending-companies.php"><i class="fa fa-clock-o"></i> Pending Companies</a></li>
+                  <li class="active"><a href="pending-companies.php"><i class="fa fa-clock-o"></i> Pending Companies</a></li>
                   <li><a href="../logout.php"><i class="fa fa-arrow-circle-o-right"></i> Logout</a></li>
                 </ul>
               </div>
@@ -68,7 +66,7 @@ require_once("../db.php");
           </div>
           <div class="col-md-9 bg-white padding-2">
 
-            <h3>Companies</h3>
+            <h3>Pending Company Approvals</h3>
             <div class="row margin-top-20">
               <div class="col-md-12">
                 <div class="box-body table-responsive no-padding">
@@ -81,12 +79,13 @@ require_once("../db.php");
                       <th>City</th>
                       <th>State</th>
                       <th>Country</th>
-                      <th>Status</th>
+                      <th>Action</th>
                       <th>Delete</th>
                     </thead>
                     <tbody>
                       <?php
-                      $sql = "SELECT * FROM company";
+                      // MODIFIED SQL: Only fetch active='2' (Pending)
+                      $sql = "SELECT * FROM company WHERE active='2'";
                       $result = $conn->query($sql);
                       if($result->num_rows > 0) {
                         while($row = $result->fetch_assoc()) {
@@ -100,23 +99,10 @@ require_once("../db.php");
                         <td><?php echo $row['state']; ?></td>
                         <td><?php echo $row['country']; ?></td>
                         <td>
-                        <?php
-                          if($row['active'] == '1') {
-                            echo "Activated";
-                          } else if($row['active'] == '2') {
-                            ?>
-                            <a href="reject-company.php?id=<?php echo $row['id_company']; ?>">Reject</a> <a href="approve-company.php?id=<?php echo $row['id_company']; ?>">Approve</a>
-                            <?php
-                          } else if ($row['active'] == '3') {
-                            ?>
-                              <a href="approve-company.php?id=<?php echo $row['id_company']; ?>">Reactivate</a>
-                            <?php
-                          } else if($row['active'] == '0') {
-                            echo "Rejected";
-                          }
-                        ?>                          
+                            <a class="btn btn-success btn-xs" href="approve-company.php?id=<?php echo $row['id_company']; ?>">Approve</a>
+                            <a class="btn btn-danger btn-xs" href="reject-company.php?id=<?php echo $row['id_company']; ?>">Reject</a>
                         </td>
-                        <td><a href="delete-company.php?id=<?php echo $row['id_company']; ?>">Delete</a></td>
+                        <td><a href="delete-company.php?id=<?php echo $row['id_company']; ?>" class="btn btn-danger btn-xs"><i class="fa fa-trash"></i></a></td>
                       </tr>  
                      <?php
                         }
@@ -132,7 +118,6 @@ require_once("../db.php");
         </div>
       </div>
     </section>
-
 
   </div>
   <footer class="main-footer" style="margin-left: 0px;">
