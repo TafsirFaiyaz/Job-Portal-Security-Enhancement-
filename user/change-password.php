@@ -1,39 +1,35 @@
 <?php
-
-//To Handle Session Variables on This Page
 session_start();
 
-if(empty($_SESSION['id_user']) || $_SESSION['role'] != 'candidate') {
-  header("Location: ../index.php");
-  exit();
+// Verify candidate login
+if (empty($_SESSION['id_user']) || $_SESSION['role'] != 'candidate') {
+    header("Location: ../index.php");
+    exit();
 }
 
-//Including Database Connection From db.php file to avoid rewriting in all files
 require_once("../db.php");
 
-//If user Actually clicked login button 
-if(isset($_POST)) {
+if (isset($_POST)) {
 
-	//Escape Special Characters in String
-	$password = mysqli_real_escape_string($conn, $_POST['password']);
+    // Hash new password
+    $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
 
-	//Encrypt Password
-	$password = base64_encode(strrev(md5($password)));
+    // Update password using Prepared Statement
+    $stmt = $conn->prepare("UPDATE users SET password=? WHERE id_user=?");
+    $stmt->bind_param("si", $password, $_SESSION['id_user']);
 
-	//sql query to check user login
-	$sql = "UPDATE users SET password='$password' WHERE id_user='$_SESSION[id_user]'";
-	if($conn->query($sql) === true) {
-		header("Location: index.php");
-		exit();
-	} else {
-		echo $conn->error;
-	}
+    if ($stmt->execute()) {
+        header("Location: index.php");
+        exit();
+    } else {
+        echo "Error: " . $conn->error;
+    }
 
- 	//Close database connection. Not compulsory but good practice.
- 	$conn->close();
+    $stmt->close();
+    $conn->close();
 
 } else {
-	//redirect them back to login page if they didn't click login button
-	header("Location: settings.php");
-	exit();
+    header("Location: settings.php");
+    exit();
 }
+?>

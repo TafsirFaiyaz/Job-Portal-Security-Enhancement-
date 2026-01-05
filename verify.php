@@ -1,22 +1,26 @@
 <?php
 session_start();
 
-if(empty($_SESSION['otp'])) {
+// Redirect if accessed without an OTP session
+if (empty($_SESSION['otp'])) {
     header("Location: index.php");
     exit();
 }
 
-if(isset($_POST['submit_otp'])) {
+if (isset($_POST['submit_otp'])) {
     
     $user_otp = $_POST['otp_code'];
     $stored_hash = $_SESSION['otp'];
 
-    // --- SECURITY FIX: Use password_verify ---
-    if(password_verify($user_otp, $stored_hash)) {
+    // 1. Check if OTP is expired
+    if (isset($_SESSION['otp_expires']) && time() > $_SESSION['otp_expires']) {
+        $error = "OTP has expired. Please log in again to get a new code.";
         
-        // --- SUCCESS ---
+    // 2. Verify OTP Match
+    } else if (password_verify($user_otp, $stored_hash)) {
         
-        if($_SESSION['temp_role'] == 'candidate') {
+        // Promote temporary session data to active session based on role
+        if ($_SESSION['temp_role'] == 'candidate') {
             $_SESSION['id_user'] = $_SESSION['temp_id_user'];
             $_SESSION['name'] = $_SESSION['temp_name'];
             $_SESSION['role'] = 'candidate';
@@ -34,13 +38,16 @@ if(isset($_POST['submit_otp'])) {
             $redirect = "admin/dashboard.php";
         }
 
-        // Clear temp session
-        unset($_SESSION['otp']);
-        unset($_SESSION['temp_id_user']);
-        unset($_SESSION['temp_id_company']);
-        unset($_SESSION['temp_id_admin']);
-        unset($_SESSION['temp_role']);
-        unset($_SESSION['temp_name']);
+        // Clean up temporary session variables
+        unset(
+            $_SESSION['otp'], 
+            $_SESSION['otp_expires'], 
+            $_SESSION['temp_id_user'], 
+            $_SESSION['temp_id_company'], 
+            $_SESSION['temp_id_admin'], 
+            $_SESSION['temp_role'], 
+            $_SESSION['temp_name']
+        );
 
         header("Location: " . $redirect);
         exit();
